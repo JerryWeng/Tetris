@@ -70,7 +70,7 @@ def draw_grid(screen, grid):
         for j in range(len(grid[i])):
             pygame.draw.line(screen, (128,128,128), (j*block_size, 50), (j*block_size, 50+p_height))
 
-# Draws the hold
+# Draws the held piece
 def draw_hold(screen, hold):
     tetromino = {
         (115,208,225):[[0,3],[0,4],[0,5],[0,6]],
@@ -106,9 +106,9 @@ def draw_window(screen, grid, s_width, score, hold):
     pygame.draw.rect(screen, (255,0,0), (0, 50, p_width, p_height), 3)
 
     # Display Score
-    font = pygame.font.SysFont('comicsans', 30)
+    font = pygame.font.SysFont('comicsans', 25)
     score = font.render("Score : " + str(score), True, (255,255,255))
-    screen.blit(score, (330, 200))
+    screen.blit(score, (315, 190))
 
     # Draw Hold
     pygame.draw.rect(screen, (0,255,0), (320, 60, 120, 120), 8)
@@ -117,6 +117,7 @@ def draw_window(screen, grid, s_width, score, hold):
 
     pygame.display.update()
 
+# Draws the actual piece falling (fills the color)
 def draw_tetromino(grid, piece):
     for i in range(len(grid)):
         for j in range(len(grid[i])):
@@ -124,19 +125,7 @@ def draw_tetromino(grid, piece):
                 grid[i][j] = piece.color
     pygame.display.update()
 
-def draw_finalPos(grid, piece):
-    remove_current(grid, piece)
-    while (valid_space(piece, grid)):
-        piece.move_down()
-    piece.move_up()
-    finalpos = piece.coords
-    
-    for i in range(len(grid)):
-        for j in range(len(grid[i])):
-            if [i,j] in finalpos:
-                grid[i][j] = (100,100,100)
-    pygame.display.update()
-
+# When an entire row is filled up, this clear it
 def removeRows(grid, places):
     places = {}
     add = 0
@@ -172,13 +161,16 @@ def removeRows(grid, places):
         points * 4
     return replacement, places, points
 
+# Detects if gameover by checking if the pieces have went to 0
 def gameover(places):
     for value in places:
         if value[0] <= 0:
             return True
     return False
 
+# Main Code 
 def main(screen, s_width):
+    # All the variables needed 
     places = {}
     grid = create_grid(places)
     current_piece = get_shape()
@@ -198,7 +190,9 @@ def main(screen, s_width):
     fall_speed = .27
     run = True
 
+    # Main loop
     while run:
+        # Incremently drops the piece
         fall_time += clock.get_rawtime()
         clock.tick()
 
@@ -211,11 +205,10 @@ def main(screen, s_width):
                 current_piece.move_up()
                 change_piece = True
 
+        # Takes in all the player inputs (movement, holding)
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                run = False
-
-            keys = pygame.key.get_pressed()        
+                run = False      
 
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_LEFT: # Move left
@@ -276,7 +269,7 @@ def main(screen, s_width):
             holdValue += 1
             change_hold = False
 
-        # changes to a new piece, no player input
+        # Changes to a new piece, when tetris piece has reached the bottom
         if change_piece:
             for coords in current_piece.coords:
                 p = (coords[0], coords[1])
@@ -296,15 +289,16 @@ def main(screen, s_width):
             run = False
 
         draw_tetromino(grid, current_piece)
-        draw_finalPos(grid, final_piece)
         draw_window(screen, grid, s_width, score, hold)
 
+# The resolution of the screen, the size of the grid,
 s_width, s_height = 450, 700
 p_width, p_height = 300, 600
 cols, rows = 10, 24
 block_size = p_width/cols
 color = (0, 0, 0)
 
+# All music added
 mixer.init()
 drop = pygame.mixer.Sound('music/drop.wav')
 clear = pygame.mixer.Sound('music/clear.wav')
